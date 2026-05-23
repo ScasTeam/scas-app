@@ -3,6 +3,20 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+import java.io.File
+import java.util.Properties
+
+// Load environment variables from root-level .env file
+val env = Properties().apply {
+    val envFile = File(rootDir, ".env")
+    if (envFile.exists()) {
+        envFile.inputStream().use { load(it) }
+    }
+}
+
+val webClientId = env.getProperty("WEB_CLIENT_ID") ?: System.getenv("WEB_CLIENT_ID") ?: ""
+val apiBaseUrl = env.getProperty("API_BASE_URL") ?: System.getenv("API_BASE_URL") ?: ""
+
 android {
     namespace = "com.bammm.scas_app"
     compileSdk {
@@ -21,9 +35,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
-        buildConfigField("String", "WEB_CLIENT_ID", "\"167505432596-2b3e4urh6ha38ogt6hf0mb8t80c7l4ak.apps.googleusercontent.com\"")
-        // Updated to your local Wi-Fi IP so the physical phone can connect!
-        buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.121:8000/api/\"")
+        buildConfigField("String", "WEB_CLIENT_ID", "\"$webClientId\"")
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
     buildTypes {
@@ -66,6 +79,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.hilt.android)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.zxing.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

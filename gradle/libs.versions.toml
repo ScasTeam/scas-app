@@ -21,6 +21,7 @@ lifecycleRuntimeCompose = "2.10.0"
 hiltAndroid = "2.56.2"
 hiltAndroidCompiler = "2.56.2"
 navigationCompose = "2.8.5"
+zxingCore = "3.5.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -50,6 +51,7 @@ androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lif
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxingCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
