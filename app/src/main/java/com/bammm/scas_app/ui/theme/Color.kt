@@ -2,43 +2,27 @@ package com.bammm.scas_app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// SCAS Brand Palette
-
-// Primary — Deep Indigo
-val ScasPrimary = Color(0xFF3D5AFE)
-val ScasPrimaryDark = Color(0xFF304FFE)
-val ScasPrimaryLight = Color(0xFF8187FF)
-val ScasOnPrimary = Color(0xFFFFFFFF)
-
-// Secondary — Teal Accent
-val ScasSecondary = Color(0xFF00BFA5)
-val ScasSecondaryDark = Color(0xFF00897B)
-val ScasSecondaryLight = Color(0xFF64FFDA)
-val ScasOnSecondary = Color(0xFF000000)
-
-// Surface / Background — Dark Theme
-val ScasSurfaceDark = Color(0xFF0F1419)
-val ScasSurfaceVariantDark = Color(0xFF1A2332)
-val ScasOnSurfaceDark = Color(0xFFE8EAED)
-val ScasOnSurfaceVariantDark = Color(0xFF9AA0A6)
-val ScasCardDark = Color(0xFF1E2A3A)
-
-// Surface / Background — Light Theme
-val ScasSurfaceLight = Color(0xFFF8F9FA)
-val ScasSurfaceVariantLight = Color(0xFFE8EAED)
-val ScasOnSurfaceLight = Color(0xFF1F2937)
-val ScasOnSurfaceVariantLight = Color(0xFF6B7280)
-val ScasCardLight = Color(0xFFFFFFFF)
+// Minimal Monochrome Palette (matched with globals.css)
+val Primary       = Color(0xFFFFFFFF) // Pure White
+val PrimaryDark   = Color(0xFF000000) // Pure Black
+val PrimaryLight  = Color(0xFFE5E5E5) // Clean Light Gray (Silver)
+val Secondary     = Color(0xFF8E8E93) // Muted Mid Gray
 
 // Status Colors
-val ScasSuccess = Color(0xFF00C853)
-val ScasWarning = Color(0xFFFFAB00)
-val ScasError = Color(0xFFFF1744)
-val ScasInfo = Color(0xFF2979FF)
+val Success       = Color(0xFF2E7D32) // Forest Green (subtle alert)
+val Warning       = Color(0xFFF57C00) // Dark Orange
+val Danger        = Color(0xFFD32F2F) // Deep Crimson Red
 
-// QR Screen specific
-val ScasQrBackground = Color(0xFF0A0E1A)
-val ScasQrAccent = Color(0xFF00E5FF)
+// Light Mode Theme Colors (Monochrome Light)
+val Background    = Color(0xFFF5F5F7) // Apple-like off-white
+val Surface       = Color(0xFFFFFFFF) // Pure white card surface
+val OnPrimary     = Color(0xFF000000) // Black text on white buttons
+val TextPrimary   = Color(0xFF171717) // Very dark gray/black text
+val TextSecondary = Color(0xFF6E6E73) // Muted gray text
+
+// Dark Mode Theme Colors (Monochrome Dark - Matched with globals.css)
+val BackgroundDark = Color(0xFF171717) // #171717 from web styles
+val SurfaceDark   = Color(0xFF242424) // Slightly lighter dark surface for card depth
 
 // Legacy (keep for compatibility)
 val Purple80 = Color(0xFFD0BCFF)

@@ -74,11 +74,6 @@ fun JoinCourseScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Icon
-            Text(text = "🔑", fontSize = 56.sp)
-
-            Spacer(modifier = Modifier.height(24.dp))
-
             Text(
                 text = "Join a Course",
                 style = MaterialTheme.typography.headlineSmall,

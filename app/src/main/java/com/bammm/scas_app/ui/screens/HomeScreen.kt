@@ -43,9 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bammm.scas_app.data.model.Course
-import com.bammm.scas_app.ui.theme.ScasPrimary
-import com.bammm.scas_app.ui.theme.ScasPrimaryLight
-import com.bammm.scas_app.ui.theme.ScasSecondary
+// Strictly themed using MaterialTheme properties
 import com.bammm.scas_app.viewmodel.CourseViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,7 +68,7 @@ fun HomeScreen(
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
             Text(
-                text = "Hello, ${userName ?: "Student"} 👋",
+                text = "Hello, ${userName ?: "Student"}",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -110,8 +108,6 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(32.dp)
                     ) {
-                        Text(text = "😕", fontSize = 48.sp)
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = uiState.error ?: "Unknown error",
                             style = MaterialTheme.typography.bodyLarge,
@@ -143,8 +139,6 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(32.dp)
                     ) {
-                        Text(text = "📚", fontSize = 56.sp)
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "No courses yet",
                             style = MaterialTheme.typography.titleMedium,
@@ -233,7 +227,10 @@ private fun CourseCard(
                     .clip(RoundedCornerShape(12.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(ScasPrimary, ScasPrimaryLight)
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            )
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -253,11 +250,11 @@ private fun CourseCard(
                 Text(
                     text = course.code,
                     style = MaterialTheme.typography.labelSmall,
-                    color = ScasSecondary,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .background(
-                            ScasSecondary.copy(alpha = 0.1f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
                             RoundedCornerShape(4.dp)
                         )
                         .padding(horizontal = 6.dp, vertical = 2.dp)

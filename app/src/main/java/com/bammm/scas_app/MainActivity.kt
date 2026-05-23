@@ -35,10 +35,7 @@ import com.bammm.scas_app.ui.screens.LoginScreen
 import com.bammm.scas_app.ui.screens.JoinCourseScreen
 import com.bammm.scas_app.ui.screens.SessionListScreen
 import com.bammm.scas_app.ui.screens.GenerateQrScreen
-import com.bammm.scas_app.ui.theme.ScasappTheme
-import com.bammm.scas_app.ui.theme.ScasPrimary
-import com.bammm.scas_app.ui.theme.ScasPrimaryLight
-import com.bammm.scas_app.ui.theme.ScasSecondary
+import com.bammm.scas_app.ui.theme.ScasTheme
 import com.bammm.scas_app.ui.theme.components.TopBar
 import com.bammm.scas_app.viewmodel.AuthViewModel
 import com.bammm.scas_app.viewmodel.AuthViewModelFactory
@@ -68,7 +65,7 @@ class MainActivity : ComponentActivity() {
         val startDest = if (hasToken) "home" else "login"
 
         setContent {
-            ScasappTheme {
+            ScasTheme {
                 val navController = rememberNavController()
                 val authViewModel: AuthViewModel = viewModel(
                     factory = AuthViewModelFactory(applicationContext)
@@ -274,7 +271,10 @@ fun Layout(
                                 .clip(CircleShape)
                                 .background(
                                     Brush.linearGradient(
-                                        colors = listOf(ScasPrimary, ScasPrimaryLight)
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primary,
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                                        )
                                     )
                                 ),
                             contentAlignment = Alignment.Center
@@ -303,11 +303,11 @@ fun Layout(
                         Text(
                             text = (userRole ?: "student").uppercase(),
                             style = MaterialTheme.typography.labelMedium,
-                            color = ScasSecondary,
+                            color = MaterialTheme.colorScheme.secondary,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier
                                 .background(
-                                    ScasSecondary.copy(alpha = 0.15f),
+                                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
                                     RoundedCornerShape(6.dp)
                                 )
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
@@ -328,7 +328,7 @@ fun Layout(
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.error,
-                                    contentColor = Color.White
+                                    contentColor = MaterialTheme.colorScheme.onError
                                 ),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
@@ -336,7 +336,7 @@ fun Layout(
                                     .height(52.dp)
                                     .padding(horizontal = 16.dp, vertical = 0.dp)
                             ) {
-                                Text("Log Out", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Text("Log Out", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                             }
                         }
                     }
