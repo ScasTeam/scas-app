@@ -9,25 +9,25 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColors = darkColorScheme(
-    primary = PrimaryLight,
-    secondary = Secondary,
-    background = BackgroundDark,
-    surface = SurfaceDark,
-    onPrimary = OnPrimary,
-    onBackground = Background,
-    onSurface = Background,
-    error = Danger,
+    primary = Primary,              // White
+    onPrimary = PrimaryDark,        // Black
+    secondary = Secondary,          // Muted Gray
+    background = BackgroundDark,    // #171717
+    surface = SurfaceDark,          // #242424
+    onBackground = Primary,         // White
+    onSurface = Primary,            // White
+    error = Danger,                 // Deep Crimson
     onError = Color.White
 )
 
 private val LightColors = lightColorScheme(
-    primary = Primary,
-    secondary = Secondary,
-    background = Background,
-    surface = Surface,
-    onPrimary = OnPrimary,
-    onBackground = TextPrimary,
-    onSurface = TextPrimary,
+    primary = PrimaryDark,          // Black
+    onPrimary = Primary,            // White
+    secondary = Secondary,          // Muted Gray
+    background = Background,        // Apple-like off-white
+    surface = Surface,              // White card surface
+    onBackground = TextPrimary,     // #171717
+    onSurface = TextPrimary,        // #171717
     error = Danger,
     onError = Color.White
 )

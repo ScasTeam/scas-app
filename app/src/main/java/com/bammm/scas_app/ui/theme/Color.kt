@@ -2,20 +2,27 @@ package com.bammm.scas_app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Primary       = Color(0xFF1A73E8)
-val PrimaryDark   = Color(0xFF0D47A1)
-val PrimaryLight  = Color(0xFF82B1FF)
-val Secondary     = Color(0xFF00BCD4)
-val Success       = Color(0xFF4CAF50)
-val Warning       = Color(0xFFFFC107)
-val Danger        = Color(0xFFF44336)
-val Background    = Color(0xFFFFFFFF)
-val Surface       = Color(0xFFF5F5F5)
-val OnPrimary     = Color(0xFFFFFFFF)
-val TextPrimary   = Color(0xFF212121)
-val TextSecondary = Color(0xFF757575)
-val BackgroundDark = Color(0xFF121212)
-val SurfaceDark   = Color(0xFF1E1E1E)
+// Minimal Monochrome Palette (matched with globals.css)
+val Primary       = Color(0xFFFFFFFF) // Pure White
+val PrimaryDark   = Color(0xFF000000) // Pure Black
+val PrimaryLight  = Color(0xFFE5E5E5) // Clean Light Gray (Silver)
+val Secondary     = Color(0xFF8E8E93) // Muted Mid Gray
+
+// Status Colors
+val Success       = Color(0xFF2E7D32) // Forest Green (subtle alert)
+val Warning       = Color(0xFFF57C00) // Dark Orange
+val Danger        = Color(0xFFD32F2F) // Deep Crimson Red
+
+// Light Mode Theme Colors (Monochrome Light)
+val Background    = Color(0xFFF5F5F7) // Apple-like off-white
+val Surface       = Color(0xFFFFFFFF) // Pure white card surface
+val OnPrimary     = Color(0xFF000000) // Black text on white buttons
+val TextPrimary   = Color(0xFF171717) // Very dark gray/black text
+val TextSecondary = Color(0xFF6E6E73) // Muted gray text
+
+// Dark Mode Theme Colors (Monochrome Dark - Matched with globals.css)
+val BackgroundDark = Color(0xFF171717) // #171717 from web styles
+val SurfaceDark   = Color(0xFF242424) // Slightly lighter dark surface for card depth
 
 // Legacy (keep for compatibility)
 val Purple80 = Color(0xFFD0BCFF)

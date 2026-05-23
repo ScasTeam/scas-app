@@ -47,10 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bammm.scas_app.data.model.CourseSession
-import com.bammm.scas_app.ui.theme.ScasError
-import com.bammm.scas_app.ui.theme.ScasQrAccent
-import com.bammm.scas_app.ui.theme.ScasSuccess
-import com.bammm.scas_app.ui.theme.ScasWarning
+import com.bammm.scas_app.ui.theme.Success
+import com.bammm.scas_app.ui.theme.Warning
 import com.bammm.scas_app.ui.theme.components.TopBar
 import com.bammm.scas_app.viewmodel.SessionViewModel
 
@@ -119,8 +117,6 @@ fun SessionListScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(32.dp)
                     ) {
-                        Text(text = "😕", fontSize = 48.sp)
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = uiState.error ?: "Unknown error",
                             style = MaterialTheme.typography.bodyLarge,
@@ -152,8 +148,6 @@ fun SessionListScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(32.dp)
                     ) {
-                        Text(text = "📋", fontSize = 48.sp)
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "No sessions yet",
                             style = MaterialTheme.typography.titleMedium,
@@ -191,7 +185,7 @@ fun SessionListScreen(
 
                         if (openSessions.isNotEmpty()) {
                             item {
-                                SectionHeader(title = "🟢  Active Now")
+                                SectionHeader(title = "Active Now")
                             }
                             items(openSessions, key = { it.id }) { session ->
                                 SessionCard(
@@ -204,7 +198,7 @@ fun SessionListScreen(
                         if (scheduledSessions.isNotEmpty()) {
                             item {
                                 Spacer(modifier = Modifier.height(4.dp))
-                                SectionHeader(title = "⏳  Scheduled")
+                                SectionHeader(title = "Scheduled")
                             }
                             items(scheduledSessions, key = { it.id }) { session ->
                                 SessionCard(
@@ -217,7 +211,7 @@ fun SessionListScreen(
                         if (closedSessions.isNotEmpty()) {
                             item {
                                 Spacer(modifier = Modifier.height(4.dp))
-                                SectionHeader(title = "✅  Completed")
+                                SectionHeader(title = "Completed")
                             }
                             items(closedSessions, key = { it.id }) { session ->
                                 SessionCard(
@@ -265,7 +259,7 @@ private fun SessionCard(
     )
 
     val borderColor = when {
-        isOpen -> ScasSuccess.copy(alpha = 0.5f)
+        isOpen -> Success.copy(alpha = 0.5f)
         isClosed -> Color.Transparent
         else -> Color.Transparent
     }
@@ -298,9 +292,9 @@ private fun SessionCard(
                     .clip(CircleShape)
                     .background(
                         when {
-                            isOpen -> ScasSuccess.copy(alpha = 0.15f)
+                            isOpen -> Success.copy(alpha = 0.15f)
                             isClosed -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f)
-                            else -> ScasWarning.copy(alpha = 0.15f)
+                            else -> Warning.copy(alpha = 0.15f)
                         }
                     ),
                 contentAlignment = Alignment.Center
@@ -313,9 +307,9 @@ private fun SessionCard(
                     },
                     contentDescription = session.status,
                     tint = when {
-                        isOpen -> ScasSuccess
+                        isOpen -> Success
                         isClosed -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
-                        else -> ScasWarning
+                        else -> Warning
                     },
                     modifier = Modifier.size(20.dp)
                 )
@@ -371,7 +365,7 @@ private fun SessionCard(
                 Text(
                     text = "Tap to\nattend",
                     style = MaterialTheme.typography.labelSmall,
-                    color = ScasSuccess,
+                    color = Success,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                     lineHeight = 14.sp

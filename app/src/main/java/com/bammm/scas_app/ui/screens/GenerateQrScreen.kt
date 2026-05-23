@@ -49,9 +49,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bammm.scas_app.ui.theme.ScasQrAccent
-import com.bammm.scas_app.ui.theme.ScasQrBackground
 import com.bammm.scas_app.viewmodel.GenerateQrViewModel
+
+private val ScasQrBackground = Color(0xFF0A0E1A)
+private val ScasQrAccent = Color(0xFF00E5FF)
 
 @Composable
 fun GenerateQrScreen(
@@ -101,10 +102,6 @@ fun GenerateQrScreen(
                     verticalArrangement = Arrangement.Center,
                     modifier = Modifier.padding(32.dp)
                 ) {
-                    Text(
-                        text = "⚠️",
-                        fontSize = 48.sp
-                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = uiState.error ?: "Unknown error",
@@ -211,7 +208,7 @@ fun GenerateQrScreen(
                     ) {
                         Column {
                             Text(
-                                text = "📱 How it works",
+                                text = "How it works",
                                 color = Color.White.copy(alpha = 0.9f),
                                 fontWeight = FontWeight.SemiBold,
                                 style = MaterialTheme.typography.bodyMedium
