@@ -32,6 +32,7 @@ import androidx.navigation.compose.rememberNavController
 import com.bammm.scas_app.data.preferences.UserPreferences
 import com.bammm.scas_app.ui.screens.HomeScreen
 import com.bammm.scas_app.ui.screens.LoginScreen
+<<<<<<< Updated upstream
 import com.bammm.scas_app.ui.screens.JoinCourseScreen
 import com.bammm.scas_app.ui.screens.SessionListScreen
 import com.bammm.scas_app.ui.screens.GenerateQrScreen
@@ -39,6 +40,9 @@ import com.bammm.scas_app.ui.theme.ScasappTheme
 import com.bammm.scas_app.ui.theme.ScasPrimary
 import com.bammm.scas_app.ui.theme.ScasPrimaryLight
 import com.bammm.scas_app.ui.theme.ScasSecondary
+=======
+import com.bammm.scas_app.ui.theme.ScasTheme
+>>>>>>> Stashed changes
 import com.bammm.scas_app.ui.theme.components.TopBar
 import com.bammm.scas_app.viewmodel.AuthViewModel
 import com.bammm.scas_app.viewmodel.AuthViewModelFactory
@@ -68,7 +72,7 @@ class MainActivity : ComponentActivity() {
         val startDest = if (hasToken) "home" else "login"
 
         setContent {
-            ScasappTheme {
+            ScasTheme {
                 val navController = rememberNavController()
                 val authViewModel: AuthViewModel = viewModel(
                     factory = AuthViewModelFactory(applicationContext)
