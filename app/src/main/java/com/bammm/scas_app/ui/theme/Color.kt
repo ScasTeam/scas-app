@@ -7,11 +7,13 @@ val Primary       = Color(0xFFFFFFFF) // Pure White
 val PrimaryDark   = Color(0xFF000000) // Pure Black
 val PrimaryLight  = Color(0xFFE5E5E5) // Clean Light Gray (Silver)
 val Secondary     = Color(0xFF8E8E93) // Muted Mid Gray
+val Accent        = Color(0xFFA1A1AA) // Zinc 400 (#a1a1aa)
 
-// Status Colors
-val Success       = Color(0xFF2E7D32) // Forest Green (subtle alert)
-val Warning       = Color(0xFFF57C00) // Dark Orange
-val Danger        = Color(0xFFD32F2F) // Deep Crimson Red
+// Status Colors (Vibrant monochromatic counterparts from globals.css)
+val Success       = Color(0xFF4ADE80) // Green 400 (#4ade80)
+val Warning       = Color(0xFFFBBF24) // Amber 400 (#fbbf24)
+val Danger        = Color(0xFFF87171) // Red 400 (#f87171)
+val Info          = Color(0xFF60A5FA) // Blue 400 (#60a5fa)
 
 // Light Mode Theme Colors (Monochrome Light)
 val Background    = Color(0xFFF5F5F7) // Apple-like off-white
@@ -24,10 +26,3 @@ val TextSecondary = Color(0xFF6E6E73) // Muted gray text
 val BackgroundDark = Color(0xFF171717) // #171717 from web styles
 val SurfaceDark   = Color(0xFF242424) // Slightly lighter dark surface for card depth
 
-// Legacy (keep for compatibility)
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)

@@ -1,6 +1,7 @@
 package com.bammm.scas_app.ui.theme.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -33,24 +34,29 @@ fun TopBar(
     TopAppBar(
         title = {
             Text(
-                text = title,
-                modifier = Modifier
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(24.dp)
-                    )
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Bold
+                text = if (title.lowercase() == "scas") "SCAS." else title.uppercase(),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 8.dp)
             )
         },
         navigationIcon = {
             if (showBackButton) {
-                IconButton(onClick = onBackClick) {
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f),
+                            shape = CircleShape
+                        )
+                ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -63,13 +69,14 @@ fun TopBar(
                 IconButton(
                     onClick = {},
                     modifier = Modifier
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f),
                             shape = CircleShape
                         )
                 ) {
                     Icon(
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = MaterialTheme.colorScheme.onBackground,
                         imageVector = Icons.Filled.Person,
                         contentDescription = "Profile menu"
                     )
