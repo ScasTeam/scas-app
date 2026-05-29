@@ -21,6 +21,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+import kotlinx.coroutines.flow.first
+
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
@@ -29,12 +35,12 @@ sealed class AuthState {
     data class Error(val message: String) : AuthState()
 }
 
-class AuthViewModel(
+@HiltViewModel
+class AuthViewModel @Inject constructor(
     private val userPreferences: UserPreferences,
-    private val context: Context
+    private val apiService: com.bammm.scas_app.data.api.ApiService,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
-
-    private val apiService = ApiClient.getService(userPreferences)
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
@@ -111,6 +117,36 @@ class AuthViewModel(
             }
         }
     }
+
+    fun assignRole(role: String, onRoleAssigned: () -> Unit) {
+        _authState.value = AuthState.Loading
+        viewModelScope.launch {
+            try {
+                val token = userPreferences.authToken.first() ?: ""
+                val response = apiService.assignRole(com.bammm.scas_app.data.model.AssignRoleRequest(role))
+                if (response.isSuccessful && response.body()?.status == "success") {
+                    val updatedUser = response.body()?.user
+                    if (updatedUser != null) {
+                        userPreferences.saveAuthData(
+                            token = token,
+                            name = updatedUser.name,
+                            email = updatedUser.email,
+                            role = updatedUser.role ?: ""
+                        )
+                        _authState.value = AuthState.Success
+                        onRoleAssigned()
+                    } else {
+                        _authState.value = AuthState.Error("Invalid user data from server")
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                    _authState.value = AuthState.Error("Failed to assign role: $errorBody")
+                }
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error("Role assignment failed: ${e.message}")
+            }
+        }
+    }
     
     private suspend fun handleAuthResponse(response: retrofit2.Response<com.bammm.scas_app.data.model.AuthResponse>) {
         if (response.isSuccessful) {
@@ -126,7 +162,7 @@ class AuthViewModel(
                             token = token,
                             name = user.name,
                             email = user.email,
-                            role = user.role
+                            role = user.role ?: ""
                         )
                         _authState.value = AuthState.Success
                     } else {
@@ -152,18 +188,7 @@ class AuthViewModel(
                 apiService.logout()
             } catch (e: Exception) {
             }
-            userPreferences.clearAuthData()
+            userPreferences.clearData()
         }
-    }
-}
-
-class AuthViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
-            val prefs = UserPreferences(context.applicationContext)
-            @Suppress("UNCHECKED_CAST")
-            return AuthViewModel(prefs, context.applicationContext) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

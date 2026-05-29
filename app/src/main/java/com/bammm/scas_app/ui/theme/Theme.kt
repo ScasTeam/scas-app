@@ -11,31 +11,34 @@ import androidx.compose.ui.platform.LocalContext
 private val DarkColors = darkColorScheme(
     primary = Primary,              // White
     onPrimary = PrimaryDark,        // Black
-    secondary = Secondary,          // Muted Gray
+    secondary = Accent,             // Zinc 400 (#a1a1aa)
     background = BackgroundDark,    // #171717
     surface = SurfaceDark,          // #242424
     onBackground = Primary,         // White
     onSurface = Primary,            // White
-    error = Danger,                 // Deep Crimson
-    onError = Color.White
+    surfaceVariant = Color(0xFF202020), // Dark gray sleek card surface
+    onSurfaceVariant = Accent,      // Zinc 400 on dark cards
+    error = Danger,                 // Vibrant Red 400 (#f87171)
+    onError = PrimaryDark
 )
 
 private val LightColors = lightColorScheme(
     primary = PrimaryDark,          // Black
     onPrimary = Primary,            // White
-    secondary = Secondary,          // Muted Gray
+    secondary = Accent,             // Zinc 400
     background = Background,        // Apple-like off-white
     surface = Surface,              // White card surface
     onBackground = TextPrimary,     // #171717
     onSurface = TextPrimary,        // #171717
+    surfaceVariant = PrimaryLight,
+    onSurfaceVariant = TextSecondary,
     error = Danger,
-    onError = Color.White
+    onError = Primary
 )
 
 @Composable
 fun ScasTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Keep dynamic color support but fallback to our brand colors
+    darkTheme: Boolean = true, // Force premium dark mode by default to match web dashboard
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {

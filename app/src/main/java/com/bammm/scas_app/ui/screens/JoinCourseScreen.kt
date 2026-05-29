@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bammm.scas_app.ui.theme.MonospacedNumbers
 import com.bammm.scas_app.viewmodel.CourseViewModel
 
 @Composable
@@ -75,10 +77,10 @@ fun JoinCourseScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Join a Course",
+                text = "JOIN COURSE",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -96,14 +98,16 @@ fun JoinCourseScreen(
             OutlinedTextField(
                 value = registrationCode,
                 onValueChange = { if (it.length <= 8) registrationCode = it.uppercase() },
-                label = { Text("Registration Code") },
+                label = { Text("REGISTRATION CODE") },
                 placeholder = { Text("e.g. ABC123") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.12f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.05f)
                 ),
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Characters,
@@ -116,9 +120,10 @@ fun JoinCourseScreen(
                         }
                     }
                 ),
-                textStyle = MaterialTheme.typography.titleMedium.copy(
-                    letterSpacing = 2.sp,
-                    fontWeight = FontWeight.SemiBold
+                textStyle = MonospacedNumbers.copy(
+                    fontSize = 20.sp,
+                    letterSpacing = 4.sp,
+                    color = MaterialTheme.colorScheme.primary
                 )
             )
 
@@ -132,14 +137,16 @@ fun JoinCourseScreen(
                     .height(52.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    disabledContentColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = CircleShape
             ) {
                 Text(
-                    "Join Course",
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.bodyLarge
+                    "JOIN COURSE",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
         }
@@ -150,3 +157,4 @@ fun JoinCourseScreen(
         )
     }
 }
+

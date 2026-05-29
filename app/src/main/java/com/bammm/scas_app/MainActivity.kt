@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,19 +36,19 @@ import com.bammm.scas_app.ui.screens.LoginScreen
 import com.bammm.scas_app.ui.screens.JoinCourseScreen
 import com.bammm.scas_app.ui.screens.SessionListScreen
 import com.bammm.scas_app.ui.screens.GenerateQrScreen
+import com.bammm.scas_app.ui.screens.ChooseRoleScreen
 import com.bammm.scas_app.ui.theme.ScasTheme
 import com.bammm.scas_app.ui.theme.components.TopBar
+import androidx.hilt.navigation.compose.hiltViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import com.bammm.scas_app.viewmodel.AuthViewModel
-import com.bammm.scas_app.viewmodel.AuthViewModelFactory
 import com.bammm.scas_app.viewmodel.CourseViewModel
-import com.bammm.scas_app.viewmodel.CourseViewModelFactory
 import com.bammm.scas_app.viewmodel.SessionViewModel
-import com.bammm.scas_app.viewmodel.SessionViewModelFactory
 import com.bammm.scas_app.viewmodel.GenerateQrViewModel
-import com.bammm.scas_app.viewmodel.GenerateQrViewModelFactory
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,33 +63,51 @@ class MainActivity : ComponentActivity() {
         
         val userPreferences = UserPreferences(applicationContext)
         val hasToken = runBlocking { userPreferences.authToken.first() != null }
-        val startDest = if (hasToken) "home" else "login"
+        val userRole = runBlocking { userPreferences.userRole.first() }
+        val startDest = if (hasToken) {
+            if (userRole.isNullOrEmpty()) "choose-role" else "home"
+        } else {
+            "login"
+        }
 
         setContent {
             ScasTheme {
                 val navController = rememberNavController()
-                val authViewModel: AuthViewModel = viewModel(
-                    factory = AuthViewModelFactory(applicationContext)
-                )
-                val courseViewModel: CourseViewModel = viewModel(
-                    factory = CourseViewModelFactory(applicationContext)
-                )
-                val generateQrViewModel: GenerateQrViewModel = viewModel(
-                    factory = GenerateQrViewModelFactory(applicationContext)
-                )
 
                 NavHost(navController = navController, startDestination = startDest) {
                     composable("login") {
+                        val authViewModel: AuthViewModel = hiltViewModel()
                         LoginScreen(
                             viewModel = authViewModel,
                             onLoginSuccess = {
+                                val role = runBlocking { userPreferences.userRole.first() }
+                                if (role.isNullOrEmpty()) {
+                                    navController.navigate("choose-role") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                } else {
+                                    navController.navigate("home") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                }
+                            }
+                        )
+                    }
+                    composable("choose-role") {
+                        val authViewModel: AuthViewModel = hiltViewModel()
+                        ChooseRoleScreen(
+                            viewModel = authViewModel,
+                            userPreferences = userPreferences,
+                            onRoleAssigned = {
                                 navController.navigate("home") {
-                                    popUpTo("login") { inclusive = true }
+                                    popUpTo("choose-role") { inclusive = true }
                                 }
                             }
                         )
                     }
                     composable("home") {
+                        val authViewModel: AuthViewModel = hiltViewModel()
+                        val courseViewModel: CourseViewModel = hiltViewModel()
                         Layout(
                             authViewModel = authViewModel,
                             courseViewModel = courseViewModel,
@@ -104,12 +123,13 @@ class MainActivity : ComponentActivity() {
                             },
                             onLogout = {
                                 navController.navigate("login") {
-                                    popUpTo("home") { inclusive = true }
+                                    popUpTo(navController.graph.id) { inclusive = true }
                                 }
                             }
                         )
                     }
                     composable("join-course") {
+                        val courseViewModel: CourseViewModel = hiltViewModel()
                         Scaffold(
                             topBar = {
                                 TopBar(
@@ -130,17 +150,12 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-                    composable("course/{courseId}/{courseName}") { backStackEntry ->
-                        val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
-                        val courseName = backStackEntry.arguments?.getString("courseName") ?: ""
-                        
-                        val sessionViewModel: SessionViewModel = viewModel(
-                            key = courseId,
-                            factory = SessionViewModelFactory(applicationContext, courseId, courseName)
-                        )
+                    composable("course/{courseId}/{courseName}") {
+                        val sessionViewModel: SessionViewModel = hiltViewModel()
                         
                         SessionListScreen(
                             viewModel = sessionViewModel,
+                            userPreferences = userPreferences,
                             onBackClick = { navController.popBackStack() },
                             onSessionClick = { _ ->
                                 navController.navigate("generate-qr")
@@ -148,6 +163,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("generate-qr") {
+                        val generateQrViewModel: GenerateQrViewModel = hiltViewModel()
                         Scaffold(
                             topBar = {
                                 TopBar(
@@ -198,46 +214,55 @@ fun Layout(
             )
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                tonalElevation = 8.dp
-            ) {
-                NavigationBarItem(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    label = { Text("Home") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                    )
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f))
                 )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onGenerateQrClick,
-                    icon = { Icon(Icons.Default.Done, contentDescription = "Generate QR") },
-                    label = { Text("Generate QR") },
-                    colors = NavigationBarItemDefaults.colors(
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    tonalElevation = 0.dp,
+                    windowInsets = NavigationBarDefaults.windowInsets
+                ) {
+                    NavigationBarItem(
+                        selected = selectedTab == 0,
+                        onClick = { selectedTab = 0 },
+                        icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                        label = { Text("HOME", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            indicatorColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f)
+                        )
                     )
-                )
-                NavigationBarItem(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    icon = { Icon(Icons.Default.Menu, contentDescription = "Menu") },
-                    label = { Text("Menu") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    NavigationBarItem(
+                        selected = false,
+                        onClick = onGenerateQrClick,
+                        icon = { Icon(Icons.Default.Done, contentDescription = "Generate QR") },
+                        label = { Text("ATTEND", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold) },
+                        colors = NavigationBarItemDefaults.colors(
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
                     )
-                )
+                    NavigationBarItem(
+                        selected = selectedTab == 2,
+                        onClick = { selectedTab = 2 },
+                        icon = { Icon(Icons.Default.Menu, contentDescription = "Menu") },
+                        label = { Text("MENU", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            indicatorColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f)
+                        )
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -251,6 +276,7 @@ fun Layout(
                     HomeScreen(
                         viewModel = courseViewModel,
                         userName = userName,
+                        userRole = userRole ?: "student",
                         onCourseClick = onCourseClick,
                         onJoinCourseClick = onJoinCourseClick
                     )
@@ -264,80 +290,74 @@ fun Layout(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        // User avatar/profile icon with gradient
+                        // User avatar/profile icon with industrial border
                         Box(
                             modifier = Modifier
                                 .size(96.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    Brush.linearGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                                        )
-                                    )
-                                ),
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.12f),
+                                    shape = CircleShape
+                                )
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(48.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
-                            text = userName ?: "Student",
-                            style = MaterialTheme.typography.headlineSmall,
+                            text = userName?.uppercase() ?: "STUDENT",
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = userEmail ?: "",
-                            style = MaterialTheme.typography.bodyLarge,
+                            text = userEmail?.uppercase() ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = (userRole ?: "student").uppercase(),
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.secondary,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier
                                 .background(
-                                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
-                                    RoundedCornerShape(6.dp)
+                                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
+                                    RoundedCornerShape(24.dp)
                                 )
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
                         )
                         Spacer(modifier = Modifier.height(48.dp))
                         
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f)
+                        Button(
+                            onClick = {
+                                authViewModel.logout()
+                                onLogout()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
                             ),
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            shape = CircleShape,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
                         ) {
-                            Button(
-                                onClick = {
-                                    authViewModel.logout()
-                                    onLogout()
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error,
-                                    contentColor = MaterialTheme.colorScheme.onError
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp)
-                                    .padding(horizontal = 16.dp, vertical = 0.dp)
-                            ) {
-                                Text("Log Out", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
-                            }
+                            Text(
+                                text = "LOG OUT",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
                         }
                     }
                 }

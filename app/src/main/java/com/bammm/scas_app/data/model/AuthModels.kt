@@ -19,7 +19,17 @@ data class User(
     val id: String,
     val name: String,
     val email: String,
+    val role: String?
+)
+
+data class AssignRoleRequest(
     val role: String
+)
+
+data class AssignRoleResponse(
+    val status: String,
+    val message: String?,
+    val user: User?
 )
 
 data class AuthResponse(

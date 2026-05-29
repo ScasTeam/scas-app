@@ -46,4 +46,8 @@ class UserPreferences(private val context: Context) {
             prefs.clear()
         }
     }
+
+    suspend fun clearData() {
+        clearAuthData()
+    }
 }
