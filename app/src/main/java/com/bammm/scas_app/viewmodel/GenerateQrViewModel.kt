@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.bammm.scas_app.data.api.ApiClient
 import com.bammm.scas_app.data.preferences.UserPreferences
 import com.bammm.scas_app.util.QrCodeGenerator
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,63 +29,62 @@ data class QrUiState(
     val error: String? = null
 )
 
-class GenerateQrViewModel(
-    private val userPreferences: UserPreferences
+@HiltViewModel
+class GenerateQrViewModel @Inject constructor(
+    private val userPreferences: UserPreferences,
+    private val apiService: com.bammm.scas_app.data.api.ApiService
 ) : ViewModel() {
-
-    private val apiService = ApiClient.getService(userPreferences)
 
     private val _uiState = MutableStateFlow(QrUiState())
     val uiState: StateFlow<QrUiState> = _uiState
 
     private var rotationJob: Job? = null
 
-    init {
-        fetchAndStartRotation()
-    }
-
-    fun fetchAndStartRotation() {
-        rotationJob?.cancel()
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            try {
-                val response = apiService.generateQr()
-                if (response.isSuccessful) {
-                    val payloads = response.body()?.qrBatch ?: emptyList()
-                    if (payloads.isEmpty()) {
-                        _uiState.update {
-                            it.copy(isLoading = false, error = "No QR codes received")
-                        }
-                        return@launch
-                    }
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            qrPayloads = payloads,
-                            totalCodes = payloads.size,
-                            currentIndex = 0
-                        )
-                    }
-                    startRotation(payloads)
-                } else {
-                    val errorBody = response.errorBody()?.string()
-                    _uiState.update {
-                        it.copy(isLoading = false, error = "Failed to generate QR: ${response.code()} $errorBody")
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("GenerateQrVM", "Failed to fetch QR batch", e)
-                _uiState.update {
-                    it.copy(isLoading = false, error = "Network error: ${e.message}")
-                }
-            }
-        }
-    }
-
-    private fun startRotation(payloads: List<String>) {
-        rotationJob?.cancel()
+    fun startGenerating() {
+        stopGenerating()
         rotationJob = viewModelScope.launch {
+            var payloads: List<String> = emptyList()
             while (isActive) {
+                if (payloads.isEmpty()) {
+                    _uiState.update { it.copy(isLoading = true, error = null) }
+                    try {
+                        val response = apiService.generateQr()
+                        if (response.isSuccessful) {
+                            payloads = response.body()?.qrBatch ?: emptyList()
+                            if (payloads.isEmpty()) {
+                                _uiState.update {
+                                    it.copy(isLoading = false, error = "No QR codes received")
+                                }
+                                delay(5000)
+                                continue
+                            }
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    qrPayloads = payloads,
+                                    totalCodes = payloads.size,
+                                    currentIndex = 0
+                                )
+                            }
+                        } else {
+                            val errorBody = response.errorBody()?.string()
+                            _uiState.update {
+                                it.copy(isLoading = false, error = "Failed to generate QR: ${response.code()} $errorBody")
+                            }
+                            delay(5000)
+                            continue
+                        }
+                    } catch (e: Exception) {
+                        Log.e("GenerateQrVM", "Failed to fetch QR batch", e)
+                        _uiState.update {
+                            it.copy(isLoading = false, error = "Network error: ${e.message}")
+                        }
+                        delay(5000)
+                        continue
+                    }
+                }
+
+                // If we successfully have payloads, run the rotation loop
                 for (i in payloads.indices) {
                     if (!isActive) return@launch
                     val bitmap = QrCodeGenerator.generate(payloads[i])
@@ -94,61 +95,31 @@ class GenerateQrViewModel(
                             qrBitmap = bitmap
                         )
                     }
-                    // Count down from 10 to 1
+                    // Count down from 9 to 0
                     for (sec in 9 downTo 0) {
                         if (!isActive) return@launch
                         delay(1000)
                         _uiState.update { it.copy(countdown = sec) }
                     }
                 }
-                // After showing all codes, fetch a new batch
-                if (!isActive) return@launch
-                _uiState.update { it.copy(isLoading = true) }
-                try {
-                    val response = apiService.generateQr()
-                    if (response.isSuccessful) {
-                        val newPayloads = response.body()?.qrBatch ?: emptyList()
-                        if (newPayloads.isNotEmpty()) {
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    qrPayloads = newPayloads,
-                                    totalCodes = newPayloads.size
-                                )
-                            }
-                            // Continue loop with new payloads — but we need to update the local var
-                            // So we call startRotation recursively and return
-                            startRotation(newPayloads)
-                            return@launch
-                        }
-                    }
-                    _uiState.update { it.copy(isLoading = false, error = "Failed to refresh QR codes") }
-                    return@launch
-                } catch (e: Exception) {
-                    _uiState.update { it.copy(isLoading = false, error = "Network error: ${e.message}") }
-                    return@launch
-                }
+
+                // Once we complete rotating all codes, clear payloads to fetch a new batch next time
+                payloads = emptyList()
             }
         }
     }
 
+    fun stopGenerating() {
+        rotationJob?.cancel()
+        rotationJob = null
+    }
+
     fun retry() {
-        fetchAndStartRotation()
+        startGenerating()
     }
 
     override fun onCleared() {
         super.onCleared()
-        rotationJob?.cancel()
-    }
-}
-
-class GenerateQrViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(GenerateQrViewModel::class.java)) {
-            val prefs = UserPreferences(context.applicationContext)
-            @Suppress("UNCHECKED_CAST")
-            return GenerateQrViewModel(prefs) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        stopGenerating()
     }
 }
