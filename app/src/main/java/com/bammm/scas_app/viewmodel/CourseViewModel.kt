@@ -6,12 +6,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.bammm.scas_app.data.api.ApiClient
 import com.bammm.scas_app.data.model.Course
-import com.bammm.scas_app.data.model.JoinCourseRequest
 import com.bammm.scas_app.data.preferences.UserPreferences
+import com.bammm.scas_app.data.repository.CourseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 data class CourseUiState(
     val isLoading: Boolean = true,
@@ -22,16 +24,21 @@ data class CourseUiState(
     val joinError: String? = null
 )
 
-class CourseViewModel(
-    private val userPreferences: UserPreferences
+@HiltViewModel
+class CourseViewModel @Inject constructor(
+    private val userPreferences: UserPreferences,
+    private val courseRepository: CourseRepository
 ) : ViewModel() {
-
-    private val apiService = ApiClient.getService(userPreferences)
 
     private val _uiState = MutableStateFlow(CourseUiState())
     val uiState: StateFlow<CourseUiState> = _uiState
 
     init {
+        viewModelScope.launch {
+            courseRepository.courses.collect { coursesList ->
+                _uiState.update { it.copy(courses = coursesList) }
+            }
+        }
         loadCourses()
     }
 
@@ -39,7 +46,7 @@ class CourseViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val response = apiService.getCourses()
+                val response = courseRepository.loadCourses()
                 if (response.isSuccessful) {
                     val courses = response.body()?.courses ?: emptyList()
                     _uiState.update { it.copy(isLoading = false, courses = courses) }
@@ -60,7 +67,7 @@ class CourseViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true, error = null) }
             try {
-                val response = apiService.getCourses()
+                val response = courseRepository.loadCourses()
                 if (response.isSuccessful) {
                     val courses = response.body()?.courses ?: emptyList()
                     _uiState.update { it.copy(isRefreshing = false, courses = courses) }
@@ -81,10 +88,9 @@ class CourseViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(joinError = null, joinMessage = null) }
             try {
-                val response = apiService.joinCourse(JoinCourseRequest(registrationCode))
+                val response = courseRepository.joinCourse(registrationCode)
                 if (response.isSuccessful) {
                     _uiState.update { it.copy(joinMessage = response.body()?.message ?: "Joined successfully!") }
-                    loadCourses() // Refresh course list
                 } else {
                     val errorBody = response.errorBody()?.string()
                     _uiState.update { it.copy(joinError = "Failed to join: $errorBody") }
@@ -97,16 +103,5 @@ class CourseViewModel(
 
     fun clearJoinMessages() {
         _uiState.update { it.copy(joinMessage = null, joinError = null) }
-    }
-}
-
-class CourseViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(CourseViewModel::class.java)) {
-            val prefs = UserPreferences(context.applicationContext)
-            @Suppress("UNCHECKED_CAST")
-            return CourseViewModel(prefs) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
