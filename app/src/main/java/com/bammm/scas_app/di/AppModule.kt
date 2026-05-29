@@ -27,9 +27,4 @@ object AppModule {
         return ApiClient.getService(userPreferences)
     }
 
-    @Provides
-    @Singleton
-    fun provideCourseRepository(apiService: ApiService): com.bammm.scas_app.data.repository.CourseRepository {
-        return com.bammm.scas_app.data.repository.CourseRepository(apiService)
-    }
 }
