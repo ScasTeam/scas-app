@@ -43,7 +43,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.bammm.scas_app.data.model.Course
+import com.bammm.scas_app.ui.theme.components.TopBar
 // Strictly themed using MaterialTheme properties
 import com.bammm.scas_app.viewmodel.CourseViewModel
 
@@ -57,12 +66,23 @@ fun HomeScreen(
     onJoinCourseClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showAddCourseDialog by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
+    Scaffold(
+        topBar = {
+            TopBar(
+                title = "SCAS",
+                showBackButton = false,
+                showProfileIcon = true
+            )
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -186,7 +206,7 @@ fun HomeScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = if (userRole == "lecturer") "CREATE A COURSE IN THE WEB PORTAL TO GET STARTED" else "JOIN A COURSE USING A REGISTRATION CODE FROM YOUR LECTURER",
+                                text = if (userRole == "lecturer") "CREATE A COURSE TO GET STARTED" else "JOIN A COURSE USING A REGISTRATION CODE FROM YOUR LECTURER",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                                 textAlign = TextAlign.Center
@@ -270,7 +290,50 @@ fun HomeScreen(
                 }
             }
         }
+        
+        // Lecturer persistent FloatingActionButton
+        if (userRole == "lecturer" && !uiState.isLoading && uiState.error == null) {
+            FloatingActionButton(
+                onClick = { showAddCourseDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Course"
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "ADD COURSE",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        if (showAddCourseDialog) {
+            AddCourseDialog(
+                onDismiss = { showAddCourseDialog = false },
+                onSubmit = { code, name, desc, domain ->
+                    viewModel.createCourse(code, name, desc, domain) {
+                        showAddCourseDialog = false
+                    }
+                },
+                isSaving = uiState.isCreatingCourse,
+                errorMessage = uiState.createCourseError
+            )
+        }
     }
+}
 }
 
 @Composable
@@ -411,3 +474,103 @@ private fun JoinCourseButton(onClick: () -> Unit) {
         }
     }
 }
+
+@Composable
+private fun AddCourseDialog(
+    onDismiss: () -> Unit,
+    onSubmit: (code: String, name: String, desc: String?, domain: String?) -> Unit,
+    isSaving: Boolean,
+    errorMessage: String?
+) {
+    var code by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var domain by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = { if (!isSaving) onDismiss() },
+        containerColor = Color(0xFF1E1E1E),
+        titleContentColor = MaterialTheme.colorScheme.primary,
+        title = { Text("CREATE COURSE", fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = { code = it },
+                    label = { Text("Course Code (e.g. CS101)") },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Course Name") },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description (Optional)") },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+                OutlinedTextField(
+                    value = domain,
+                    onValueChange = { domain = it },
+                    label = { Text("Allowed Email Domain (Optional)") },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (code.isNotBlank() && name.isNotBlank()) {
+                        onSubmit(
+                            code,
+                            name,
+                            description.takeIf { it.isNotBlank() },
+                            domain.takeIf { it.isNotBlank() }
+                        )
+                    }
+                },
+                enabled = !isSaving && code.isNotBlank() && name.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                if (isSaving) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                } else {
+                    Text("CREATE", fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isSaving) {
+                Text("CANCEL", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+            }
+        }
+    )
+}
+

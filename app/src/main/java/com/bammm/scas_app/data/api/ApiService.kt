@@ -1,6 +1,8 @@
 package com.bammm.scas_app.data.api
 
 import com.bammm.scas_app.data.model.AuthResponse
+import com.bammm.scas_app.data.model.CreateCourseRequest
+import com.bammm.scas_app.data.model.CreateCourseResponse
 import com.bammm.scas_app.data.model.CoursesResponse
 import com.bammm.scas_app.data.model.GenerateQrResponse
 import com.bammm.scas_app.data.model.GoogleLoginRequest
@@ -39,6 +41,9 @@ interface ApiService {
 
     @GET("courses")
     suspend fun getCourses(): Response<CoursesResponse>
+
+    @POST("courses")
+    suspend fun createCourse(@Body request: CreateCourseRequest): Response<CreateCourseResponse>
 
     @GET("courses/{courseId}/sessions")
     suspend fun getCourseSessions(@Path("courseId") courseId: String): Response<SessionsResponse>
