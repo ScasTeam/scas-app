@@ -31,7 +31,7 @@ import com.bammm.scas_app.viewmodel.AuthViewModel
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: (role: String?) -> Unit
 ) {
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -41,8 +41,9 @@ fun LoginScreen(
     
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
+            val role = (authState as AuthState.Success).role
             viewModel.resetState()
-            onLoginSuccess()
+            onLoginSuccess(role)
         }
     }
 

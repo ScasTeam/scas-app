@@ -21,7 +21,9 @@ data class CourseUiState(
     val error: String? = null,
     val isRefreshing: Boolean = false,
     val joinMessage: String? = null,
-    val joinError: String? = null
+    val joinError: String? = null,
+    val isCreatingCourse: Boolean = false,
+    val createCourseError: String? = null
 )
 
 @HiltViewModel
@@ -102,6 +104,30 @@ class CourseViewModel @Inject constructor(
     }
 
     fun clearJoinMessages() {
-        _uiState.update { it.copy(joinMessage = null, joinError = null) }
+        _uiState.update { it.copy(joinMessage = null, joinError = null, createCourseError = null) }
+    }
+
+    fun createCourse(
+        code: String,
+        name: String,
+        description: String?,
+        domain: String?,
+        onSuccess: () -> Unit
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isCreatingCourse = true, createCourseError = null) }
+            try {
+                val response = courseRepository.createCourse(code, name, description, domain)
+                if (response.isSuccessful) {
+                    _uiState.update { it.copy(isCreatingCourse = false) }
+                    onSuccess()
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    _uiState.update { it.copy(isCreatingCourse = false, createCourseError = "Failed to create course: $errorBody") }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isCreatingCourse = false, createCourseError = "Network error: ${e.message}") }
+            }
+        }
     }
 }

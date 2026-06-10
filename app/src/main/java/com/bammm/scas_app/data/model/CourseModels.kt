@@ -28,3 +28,16 @@ data class CoursePivot(
     @SerializedName("user_id") val userId: String?,
     @SerializedName("course_id") val courseId: String?
 )
+
+data class CreateCourseRequest(
+    val code: String,
+    @SerializedName("course_name") val courseName: String,
+    val description: String?,
+    @SerializedName("allowed_email_domain") val allowedEmailDomain: String?
+)
+
+data class CreateCourseResponse(
+    val status: String?,
+    val message: String?,
+    val course: Course?
+)

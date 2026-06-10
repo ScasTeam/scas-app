@@ -31,7 +31,7 @@ sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
     data class RequireOtp(val email: String) : AuthState()
-    object Success : AuthState()
+    data class Success(val role: String?) : AuthState()
     data class Error(val message: String) : AuthState()
 }
 
@@ -133,7 +133,7 @@ class AuthViewModel @Inject constructor(
                             email = updatedUser.email,
                             role = updatedUser.role ?: ""
                         )
-                        _authState.value = AuthState.Success
+                        _authState.value = AuthState.Success(updatedUser.role)
                         onRoleAssigned()
                     } else {
                         _authState.value = AuthState.Error("Invalid user data from server")
@@ -164,7 +164,7 @@ class AuthViewModel @Inject constructor(
                             email = user.email,
                             role = user.role ?: ""
                         )
-                        _authState.value = AuthState.Success
+                        _authState.value = AuthState.Success(user.role)
                     } else {
                         _authState.value = AuthState.Error("Invalid user data from server")
                     }
