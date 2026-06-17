@@ -1,5 +1,7 @@
 package com.bammm.scas_app.ui.screens
 
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -120,18 +122,18 @@ fun SessionListScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("SESSIONS", fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
+                    text = { Text("SESSIONS", fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontSize = 14.sp) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text(if (isLecturer) "STUDENTS" else "ATTENDANCE", fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
+                    text = { Text(if (isLecturer) "STUDENTS" else "ATTENDANCE", fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontSize = 14.sp) }
                 )
                 if (isLecturer) {
                     Tab(
                         selected = selectedTab == 2,
                         onClick = { selectedTab = 2 },
-                        text = { Text("ATTENDANCE", fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
+                        text = { Text("ATTENDANCE", fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontSize = 14.sp) }
                     )
                 }
             }
@@ -220,40 +222,55 @@ private fun SessionsTabContent(
             }
         }
     } else {
+        var isVisible by remember { mutableStateOf(false) }
+        LaunchedEffect(uiState.sessions) {
+            if (uiState.sessions.isNotEmpty()) {
+                isVisible = true
+            }
+        }
+
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = { viewModel.refresh() },
             modifier = Modifier.fillMaxSize()
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = fadeIn(animationSpec = tween(400)) + slideInVertically(
+                    initialOffsetY = { it / 8 },
+                    animationSpec = tween(400)
+                )
             ) {
-                val openSessions = uiState.sessions.filter { it.status == "open" }
-                val scheduledSessions = uiState.sessions.filter { it.status == "scheduled" }
-                val closedSessions = uiState.sessions.filter { it.status == "closed" }
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    val openSessions = uiState.sessions.filter { it.status == "open" }
+                    val scheduledSessions = uiState.sessions.filter { it.status == "scheduled" }
+                    val closedSessions = uiState.sessions.filter { it.status == "closed" }
 
-                if (openSessions.isNotEmpty()) {
-                    item { SectionHeader(title = "ACTIVE NOW") }
-                    items(openSessions, key = { it.id }) { session ->
-                        SessionCard(
-                            session = session,
-                            onClick = { if (!isLecturer) onSessionClick(session.id) }
-                        )
+                    if (openSessions.isNotEmpty()) {
+                        item { SectionHeader(title = "ACTIVE NOW") }
+                        items(openSessions, key = { it.id }) { session ->
+                            SessionCard(
+                                session = session,
+                                onClick = { if (!isLecturer) onSessionClick(session.id) }
+                            )
+                        }
                     }
-                }
 
-                if (scheduledSessions.isNotEmpty()) {
-                    item { SectionHeader(title = "SCHEDULED") }
-                    items(scheduledSessions, key = { it.id }) { session ->
-                        SessionCard(session = session, onClick = null)
+                    if (scheduledSessions.isNotEmpty()) {
+                        item { SectionHeader(title = "SCHEDULED") }
+                        items(scheduledSessions, key = { it.id }) { session ->
+                            SessionCard(session = session, onClick = null)
+                        }
                     }
-                }
 
-                if (closedSessions.isNotEmpty()) {
-                    item { SectionHeader(title = "COMPLETED") }
-                    items(closedSessions, key = { it.id }) { session ->
-                        SessionCard(session = session, onClick = null)
+                    if (closedSessions.isNotEmpty()) {
+                        item { SectionHeader(title = "COMPLETED") }
+                        items(closedSessions, key = { it.id }) { session ->
+                            SessionCard(session = session, onClick = null)
+                        }
                     }
                 }
             }
@@ -296,6 +313,9 @@ private fun SessionCard(
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         colors = CardDefaults.cardColors(containerColor = cardColor),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isOpen) 4.dp else 1.dp
+        ),
         shape = RoundedCornerShape(16.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, borderColor)
     ) {
@@ -653,6 +673,22 @@ private fun LecturerAttendanceTabContent(
     uiState: com.bammm.scas_app.viewmodel.SessionUiState,
     viewModel: SessionViewModel
 ) {
+    val context = LocalContext.current
+
+    LaunchedEffect(uiState.exportSuccess) {
+        if (uiState.exportSuccess) {
+            Toast.makeText(context, "Export saved to Downloads folder", Toast.LENGTH_LONG).show()
+            viewModel.resetExportState()
+        }
+    }
+
+    LaunchedEffect(uiState.exportError) {
+        uiState.exportError?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.resetExportState()
+        }
+    }
+
     if (uiState.sessions.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
             Text("NO ATTENDANCE SESSIONS AVAILABLE", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
@@ -685,6 +721,23 @@ private fun LecturerAttendanceTabContent(
                             Text(totalAttendance.toString(), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             Text("ATTENDANCE RECORDS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f))
                         }
+                    }
+                }
+
+                Button(
+                    onClick = { viewModel.exportAttendance("csv") },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    enabled = !uiState.isExporting,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (uiState.isExporting) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("EXPORTING...", fontWeight = FontWeight.Bold)
+                    } else {
+                        Icon(Icons.Default.Share, contentDescription = "Export")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("EXPORT REPORT (CSV)", fontWeight = FontWeight.Bold)
                     }
                 }
             }

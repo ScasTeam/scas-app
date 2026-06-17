@@ -1,6 +1,11 @@
 package com.bammm.scas_app.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,11 +28,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -236,26 +243,42 @@ fun HomeScreen(
                 }
 
                 else -> {
-                    PullToRefreshBox(
-                        isRefreshing = uiState.isRefreshing,
-                        onRefresh = { viewModel.refresh() },
+                    var isVisible by remember { mutableStateOf(false) }
+                    LaunchedEffect(uiState.courses) {
+                        if (uiState.courses.isNotEmpty()) {
+                            isVisible = true
+                        }
+                    }
+
+                    AnimatedVisibility(
+                        visible = isVisible,
+                        enter = fadeIn(animationSpec = tween(400)) + slideInVertically(
+                            initialOffsetY = { it / 8 },
+                            animationSpec = tween(400)
+                        ),
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(1f)
                     ) {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        PullToRefreshBox(
+                            isRefreshing = uiState.isRefreshing,
+                            onRefresh = { viewModel.refresh() },
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            items(uiState.courses, key = { it.id }) { course ->
-                                CourseCard(
-                                    course = course,
-                                    onClick = { onCourseClick(course.id, course.courseName) }
-                                )
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(uiState.courses, key = { it.id }) { course ->
+                                    CourseCard(
+                                        course = course,
+                                        onClick = { onCourseClick(course.id, course.courseName) }
+                                    )
+                                }
+                                item { Spacer(modifier = Modifier.height(80.dp)) }
                             }
-                            item { Spacer(modifier = Modifier.height(80.dp)) }
                         }
                     }
                 }
@@ -346,7 +369,10 @@ private fun CourseCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
         ),
         shape = RoundedCornerShape(16.dp),
         border = androidx.compose.foundation.BorderStroke(

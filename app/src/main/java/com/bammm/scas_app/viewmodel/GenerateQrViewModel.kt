@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.bammm.scas_app.data.api.ApiClient
 import com.bammm.scas_app.data.preferences.UserPreferences
+import com.bammm.scas_app.data.model.GenerateQrRequest
 import com.bammm.scas_app.util.QrCodeGenerator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -40,7 +41,7 @@ class GenerateQrViewModel @Inject constructor(
 
     private var rotationJob: Job? = null
 
-    fun startGenerating() {
+    fun startGenerating(sessionId: String) {
         stopGenerating()
         rotationJob = viewModelScope.launch {
             var payloads: List<String> = emptyList()
@@ -48,7 +49,7 @@ class GenerateQrViewModel @Inject constructor(
                 if (payloads.isEmpty()) {
                     _uiState.update { it.copy(isLoading = true, error = null) }
                     try {
-                        val response = apiService.generateQr()
+                        val response = apiService.generateQr(GenerateQrRequest(sessionId))
                         if (response.isSuccessful) {
                             payloads = response.body()?.qrBatch ?: emptyList()
                             if (payloads.isEmpty()) {
@@ -114,8 +115,8 @@ class GenerateQrViewModel @Inject constructor(
         rotationJob = null
     }
 
-    fun retry() {
-        startGenerating()
+    fun retry(sessionId: String) {
+        startGenerating(sessionId)
     }
 
     override fun onCleared() {

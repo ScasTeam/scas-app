@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
         )
-        
+
         enableEdgeToEdge()
         
         val userPreferences = UserPreferences(applicationContext)
@@ -183,12 +183,13 @@ class MainActivity : ComponentActivity() {
                                     viewModel = sessionViewModel,
                                     userPreferences = userPreferences,
                                     onBackClick = { navController.popBackStack() },
-                                    onSessionClick = { _ ->
-                                        navController.navigate("generate-qr")
+                                    onSessionClick = { sessionId ->
+                                        navController.navigate("generate-qr/$sessionId")
                                     }
                                 )
                             }
-                            composable("generate-qr") {
+                            composable("generate-qr/{sessionId}") { backStackEntry ->
+                                val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
                                 val generateQrViewModel: GenerateQrViewModel = hiltViewModel()
                                 Scaffold(
                                     topBar = {
@@ -205,7 +206,10 @@ class MainActivity : ComponentActivity() {
                                             .fillMaxSize()
                                             .padding(paddingValues)
                                     ) {
-                                        GenerateQrScreen(viewModel = generateQrViewModel)
+                                        GenerateQrScreen(
+                                            sessionId = sessionId,
+                                            viewModel = generateQrViewModel
+                                        )
                                     }
                                 }
                             }

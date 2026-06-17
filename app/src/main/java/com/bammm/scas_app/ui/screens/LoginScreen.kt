@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,6 +39,8 @@ fun LoginScreen(
     val credentialManager = remember { CredentialManager.create(context) }
     
     var otpText by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
@@ -136,7 +139,7 @@ fun LoginScreen(
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
                             Button(
-                                onClick = { viewModel.signInWithGoogle(credentialManager) },
+                                onClick = { viewModel.resetState() },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -144,28 +147,90 @@ fun LoginScreen(
                                 shape = CircleShape,
                                 modifier = Modifier.fillMaxWidth().height(56.dp)
                             ) {
-                                Text("RETRY SIGN IN WITH GOOGLE", fontWeight = FontWeight.Bold)
+                                Text("RETRY", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
                     else -> {
-                        Button(
-                            onClick = { viewModel.signInWithGoogle(credentialManager) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            ),
-                            shape = CircleShape,
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(64.dp)
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
+                            OutlinedTextField(
+                                value = email,
+                                onValueChange = { email = it },
+                                label = { Text("Email Address") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Email,
+                                    imeAction = ImeAction.Next
+                                )
+                            )
+                            OutlinedTextField(
+                                value = password,
+                                onValueChange = { password = it },
+                                label = { Text("Password") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                visualTransformation = PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Password,
+                                    imeAction = ImeAction.Done
+                                )
+                            )
+                            Button(
+                                onClick = { viewModel.loginWithEmail(email, password) },
+                                enabled = email.isNotBlank() && password.length >= 8,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                                shape = CircleShape,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
                             ) {
                                 Text(
-                                    text = "LOGIN WITH GOOGLE SSO",
+                                    text = "SIGN IN / SIGN UP",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.5.sp
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Divider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
+                                Text(
+                                    text = "OR",
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    style = MonospacedSub,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                                )
+                                Divider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
+                            }
+
+                            Button(
+                                onClick = { viewModel.signInWithGoogle(credentialManager) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Transparent,
+                                    contentColor = MaterialTheme.colorScheme.primary
+                                ),
+                                shape = CircleShape,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
+                            ) {
+                                Text(
+                                    text = "GOOGLE SSO",
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 1.5.sp

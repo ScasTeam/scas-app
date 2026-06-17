@@ -8,6 +8,13 @@ data class GoogleLoginRequest(
     @SerializedName("android_id") val androidId: String? = null
 )
 
+data class EmailLoginRequest(
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("client_type") val clientType: String = "mobile",
+    @SerializedName("android_id") val androidId: String? = null
+)
+
 data class VerifyOtpRequest(
     @SerializedName("email") val email: String,
     @SerializedName("code") val code: String,
