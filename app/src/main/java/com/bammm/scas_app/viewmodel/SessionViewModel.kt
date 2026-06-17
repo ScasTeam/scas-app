@@ -16,6 +16,10 @@ import com.bammm.scas_app.data.model.AssignRoleRequest
 import com.bammm.scas_app.data.preferences.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import android.content.ContentValues
+import android.os.Environment
+import android.provider.MediaStore
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -37,11 +41,15 @@ data class SessionUiState(
     val sessionAttendees: Map<String, List<AttendeeLog>> = emptyMap(),
     val attendeesLoading: Map<String, Boolean> = emptyMap(),
     val isCreatingSession: Boolean = false,
-    val createSessionError: String? = null
+    val createSessionError: String? = null,
+    val isExporting: Boolean = false,
+    val exportError: String? = null,
+    val exportSuccess: Boolean = false
 )
 
 @HiltViewModel
 class SessionViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val userPreferences: UserPreferences,
     private val apiService: com.bammm.scas_app.data.api.ApiService,
     private val savedStateHandle: SavedStateHandle
@@ -232,6 +240,60 @@ class SessionViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { it.copy(isCreatingSession = false, createSessionError = e.message) }
             }
+        }
+    }
+
+    fun exportAttendance(format: String = "csv") {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isExporting = true, exportError = null, exportSuccess = false) }
+            try {
+                val response = apiService.exportAttendance(courseId, format)
+                if (response.isSuccessful) {
+                    response.body()?.let { body ->
+                        saveFileToDownloads(body, format)
+                        _uiState.update { it.copy(isExporting = false, exportSuccess = true) }
+                    } ?: run {
+                        _uiState.update { it.copy(isExporting = false, exportError = "Empty file returned") }
+                    }
+                } else {
+                    _uiState.update { it.copy(isExporting = false, exportError = "Export failed: ${response.code()}") }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isExporting = false, exportError = e.message) }
+            }
+        }
+    }
+
+    fun resetExportState() {
+        _uiState.update { it.copy(exportSuccess = false, exportError = null) }
+    }
+
+    private fun saveFileToDownloads(body: okhttp3.ResponseBody, format: String) {
+        val filename = "${courseName.replace(" ", "_")}_attendance.$format"
+        val resolver = context.contentResolver
+        
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+            val mimeType = when(format) {
+                "csv" -> "text/csv"
+                "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                "pdf" -> "application/pdf"
+                else -> "application/octet-stream"
+            }
+            put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/SCAS")
+        }
+
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+        
+        if (uri != null) {
+            resolver.openOutputStream(uri)?.use { outputStream ->
+                body.byteStream().use { inputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            }
+        } else {
+            throw Exception("Failed to create file in Downloads/SCAS")
         }
     }
 }

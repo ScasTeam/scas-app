@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.bammm.scas_app.BuildConfig
 import com.bammm.scas_app.data.api.ApiClient
 import com.bammm.scas_app.data.model.GoogleLoginRequest
+import com.bammm.scas_app.data.model.EmailLoginRequest
 import com.bammm.scas_app.data.model.VerifyOtpRequest
 import com.bammm.scas_app.data.preferences.UserPreferences
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -95,6 +96,25 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.Idle
             } catch (e: Exception) {
                 Log.e("Auth", "Google sign in failed", e)
+                _authState.value = AuthState.Error("Sign in failed: ${e.message}")
+            }
+        }
+    }
+
+    fun loginWithEmail(email: String, password: String) {
+        _authState.value = AuthState.Loading
+        viewModelScope.launch {
+            try {
+                val loginRequest = EmailLoginRequest(
+                    email = email,
+                    password = password,
+                    clientType = "mobile",
+                    androidId = getAndroidId()
+                )
+                val response = apiService.emailLogin(loginRequest)
+                handleAuthResponse(response)
+            } catch (e: Exception) {
+                Log.e("Auth", "Email sign in failed", e)
                 _authState.value = AuthState.Error("Sign in failed: ${e.message}")
             }
         }

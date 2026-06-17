@@ -6,3 +6,7 @@ data class GenerateQrResponse(
     val status: String,
     @SerializedName("qr_batch") val qrBatch: List<String>
 )
+
+data class GenerateQrRequest(
+    @SerializedName("session_id") val sessionId: String
+)

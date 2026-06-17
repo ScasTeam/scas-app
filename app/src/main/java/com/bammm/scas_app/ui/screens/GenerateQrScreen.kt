@@ -55,16 +55,17 @@ import com.bammm.scas_app.viewmodel.GenerateQrViewModel
 
 @Composable
 fun GenerateQrScreen(
+    sessionId: String,
     viewModel: GenerateQrViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner, viewModel) {
+    DisposableEffect(lifecycleOwner, viewModel, sessionId) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    viewModel.startGenerating()
+                    viewModel.startGenerating(sessionId)
                 }
                 Lifecycle.Event.ON_PAUSE -> {
                     viewModel.stopGenerating()
@@ -133,7 +134,7 @@ fun GenerateQrScreen(
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
-                        onClick = { viewModel.retry() },
+                        onClick = { viewModel.retry(sessionId) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
